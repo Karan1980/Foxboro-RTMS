@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Grid,
   IconButton,
@@ -14,14 +14,28 @@ import {
   Button,
   FormControl,
   Select,
+  Typography,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
+import { addInstallation, addLocation, getLocation, getAllInstallation, getAllInstallations } from '../../apis/wellService.js'
 import DeleteIcon from "@mui/icons-material/Delete";
-import { styled } from "@mui/material/styles";
 import { toast } from "react-toastify";
-import { addLocation, getLocation } from "../../apis/wellService";
+import { styled } from "@mui/material/styles";
+import { useSelector } from "react-redux";
+import { state } from "@antv/g2plot/lib/adaptor/common";
+
 
 function WellDetailAdd() {
+  const [location, setLocation] = useState("");
+  const [allLocation, setAllLocation] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [insLoading, setInsLoading] = useState(true);
+  const [locationMenuItem, setLocationMenuItem] = useState("")
+  const [installation, setInstallation] = useState("");
+  const [tableInstallation, setTableInstallation] = useState([]);
+  const organizationName = useSelector((state) => state.auth.organization)
+
+
   const handleEdit = () => {
     console.log("Edit clicked");
   };
@@ -29,6 +43,115 @@ function WellDetailAdd() {
   const handleDelete = () => {
     console.log("Delete clicked");
   };
+
+  const handleAddLocation = async () => {
+
+    if (!location) {
+      toast.error("Please enter location");
+      return;
+    }
+    try {
+      const data = {
+        organizationName: organizationName,
+        location: location,
+      }
+      const resp = await addLocation(data);
+      if (Object.keys(resp).length <= 1) {
+        toast.error("Location already exist");
+        return;
+      }
+      else {
+        setAllLocation([...allLocation, location]);
+        toast.success(resp.message);
+        setLocation("");
+      }
+    } catch (error) {
+
+      console.log(error);
+    }
+  }
+
+  const addInstallationForLocation = async () => {
+    if (!installation) {
+      toast.error("Please enter installation");
+      return;
+    }
+    try {
+      const data = {
+        organizationName,
+        location: locationMenuItem,
+        installation: installation,
+      }
+      const resp = await addInstallation(data);
+      if (Object.keys(resp).length <= 1) {
+        toast.error("Installation already exist");
+        return;
+      }
+      else {
+        toast.success(resp.message);
+        const newInstallation = {
+          location: locationMenuItem,
+          installations: {
+            name: installation,
+          },
+        };
+        setTableInstallation([...tableInstallation, newInstallation]);
+        setInstallation("");
+        setLocationMenuItem("")
+        // data.location="";
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const data = await getLocation(organizationName);
+        // setAllLocation(resp);
+        setAllLocation(data.data);
+        setLoading(false);
+      } catch (error) {
+        console.log(error);
+      }
+      try {
+        const value = await getAllInstallations(organizationName);
+        setTableInstallation(value.data)
+        setInsLoading(false)
+      } catch (error) {
+        console.log(error);
+      }
+    })();
+
+  }, []);
+
+
+  const [selectedLocation, setSelectedLocation] = useState("");
+  const [installations, setInstallations] = useState([]);
+  const [loadingInstallations, setLoadingInstallations] = useState(false);
+
+
+
+  const handleLocationChange = async (event) => {
+    const location = event.target.value;
+    setSelectedLocation(location); // Update the selected location
+    setLoadingInstallations(true); // Show loading indicator
+
+    try {
+      const response = await getAllInstallation(location, organizationName); // Pass organizationName as needed
+      setInstallations(response.data); // Update the installations list
+    } catch (error) {
+      console.error("Error fetching installations:", error);
+    } finally {
+      setLoadingInstallations(false); // Hide loading indicator
+    }
+  };
+
+
+
+
 
   // Styled components
   const CustomTableCell = styled(TableCell)(({ theme }) => ({
@@ -68,74 +191,20 @@ function WellDetailAdd() {
     setValue3(event.target.value);
   };
 
-  // -------Adding New Location---------
-
-  // const [location, setLocation] = useState([]);
-
-
-  // const handleAddLocation = async() => {
-  //   if(!location){
-  //     toast.error("Location is required");
-  //     return;
-  //   }
-  //   try{
-  //     const formData = {
-  //       location: location,
-  //       organizationName,
-  //     };
-  //     const response = await addLocation(formData);
-  //     if(response){
-  //       toast.success(response.message);
-  //       setLocation("");
-
-  //       setLocation((prevLocation) => {
-  //         const updatedLocation = [...prevLocation, formData.location];
-
-  //         return updatedLocation;
-  //       });
-  //     } else {
-  //       toast.error(response.message);
-  //     }
-  //   } catch (error) {
-  //     toast.error("Something went wrong")
-  //   }
-  // };
-
-  //  fetch location
-
-  // useEffect(()=>{
-  //   const fetchLocation = async () => {
-
-  //     const data = await getLocation();
-  //     if(data && data.message === "Well location fetched successfully"){
-  //       setLocation(data.data);
-  //     }
-  //   };
-  //   fetchLocation();
-  // },[organizationName]);
-
 
 
   return (
     <div>
       <Grid container spacing={2}>
-        {/* First Section */}
+        {/* Add Location */}
         <Grid item lg={4}>
           {/* Input and Add Button */}
           <Grid container spacing={2} alignItems="center">
             <Grid item lg={9.5} xs={12}>
-              <TextField
-                label="Add Location"
-                size="small"
-                // value={location}
-                // onChange={(e) => {
-                //   setLocation(e.target.value);
-                // }} 
-                fullWidth />
+              <TextField label="Add Location" size="small" fullWidth value={location} onChange={(e) => setLocation(e.target.value)} />
             </Grid>
             <Grid item lg={2.5} xs={12}>
               <Button
-                //  onClick={handleAddLocation}
                 sx={{
                   color: "white",
                   backgroundColor: "green",
@@ -144,6 +213,7 @@ function WellDetailAdd() {
                   },
                 }}
                 fullWidth
+                onClick={(e) => handleAddLocation()}
               >
                 Add
               </Button>
@@ -155,38 +225,52 @@ function WellDetailAdd() {
             <TableContainer component={Paper} sx={{ maxHeight: 320, height: 400, overflow: "auto" }}>
               <Table>
                 <TableBody>
-                  <CustomTableRow>
-                    <CustomTableCell align="right">
-                      This is the only content in the table.
-                    </CustomTableCell>
-                    <CustomTableCell align="right">
-                      <IconButton color="primary" onClick={handleEdit}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton color="secondary" onClick={handleDelete}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </CustomTableCell>
-                  </CustomTableRow>
+                  {loading ? <div>Loading ....</div> :
+
+                    (allLocation.length ? allLocation.map((location, index) => (
+                      <CustomTableRow key={index}>
+                        <CustomTableCell align="left">{location}</CustomTableCell>
+                        <CustomTableCell align="left">
+                          <IconButton onClick={handleEdit}>
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton onClick={handleDelete}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </CustomTableCell>
+                      </CustomTableRow>
+                    )) : <CustomTableRow>
+                      <CustomTableCell align="center">
+                        No Locations Available
+                      </CustomTableCell>
+                    </CustomTableRow>)
+                  }
                 </TableBody>
               </Table>
             </TableContainer>
           </Grid>
         </Grid>
 
-        {/* Second Section */}
-        <Grid item lg={8}  >
+        {/* Add Installation */}
+        <Grid item lg={8} >
+          <Grid container spacing={2}>
+            <Grid item lg={5}>
+              <FormControl fullWidth size="small">
+                <InputLabel id="dropdown-label">Add Location</InputLabel>
 
-          <Grid item lg={12} sx={{ display: 'flex' }} gap={2}> 
-            <FormControl fullWidth size="small">
-              <InputLabel id="dropdown-label">Add Location</InputLabel>
-
-              <Select labelId="location-select-label" id="location-select" label="Choose Option">
-                <MenuItem value="">Add location based on other fields</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField label="Add Installation" fullWidth size="small" />
-            <Grid item lg={2.7} xs={12}>
+                <Select labelId="location-select-label" id="location-select" label="Choose Option" value={locationMenuItem} onChange={(e) => setLocationMenuItem(e.target.value)}>
+                  {
+                    loading ? <div>Loading ....</div> : (allLocation.length ? allLocation.map((location, index) => (
+                      <MenuItem key={index} value={location}>{location}</MenuItem>
+                    )) : <MenuItem>no location</MenuItem>)
+                  }
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item lg={5}>
+              <TextField label="Add Installation" fullWidth size="small" value={installation} onChange={(e) => setInstallation(e.target.value)} />
+            </Grid>
+            <Grid item lg={2} xs={12}>
               <Button
                 sx={{
                   color: "white",
@@ -196,73 +280,113 @@ function WellDetailAdd() {
                   },
                 }}
                 fullWidth
+                onClick={addInstallationForLocation}
               >
                 Add
               </Button>
             </Grid>
           </Grid>
 
-
           {/* Table */}
-          <Grid item mt={2}>
+          <Grid item mt={2.5}>
             <TableContainer component={Paper} sx={{ maxHeight: 320, height: 400, overflow: "auto" }}>
               <Table>
                 <TableBody>
-                  <CustomTableRow>
-                    <CustomTableCell align="left">Add Location</CustomTableCell>
-                    <CustomTableCell align="left">Add Installation</CustomTableCell>
-                    <CustomTableCell align="right">
-                      <IconButton color="primary" onClick={handleEdit}>
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton color="secondary" onClick={handleDelete}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </CustomTableCell>
-                  </CustomTableRow>
+                  {insLoading ? (<Typography>loading...</Typography>) : (tableInstallation?.map((item, index) => (
+                    <CustomTableRow key={index} >
+                      <CustomTableCell align="left"  >{item.location}</CustomTableCell>
+                      <CustomTableCell align="left">{item.installations.name}</CustomTableCell>
+                      <CustomTableCell align="right">
+                        <IconButton color="primary" onClick={handleEdit}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton color="secondary" onClick={handleDelete}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </CustomTableCell>
+                    </CustomTableRow>
+                  )))}
+
                 </TableBody>
+
+                {/* <TableBody>
+                  {tableInstallation?.map((item, index) => (
+                    <CustomTableRow key={item.installations._id}>
+                      <CustomTableCell align="left">{item.location}</CustomTableCell>
+
+                      <CustomTableCell align="left">{}</CustomTableCell>
+
+                      <CustomTableCell align="right">
+                        <IconButton color="primary" onClick={() => handleEdit(item)}>
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton color="secondary" onClick={() => handleDelete(item)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </CustomTableCell>
+                    </CustomTableRow>
+                  ))}
+                </TableBody> */}
+
               </Table>
             </TableContainer>
           </Grid>
         </Grid>
       </Grid>
 
-      <Grid container mt={3} mb={2} spacing={3} >
-        <Grid item lg={2.8}>
+      {/* --- Well Number--- */}
+      <Grid container mt={2.5} mb={2} spacing={3} >
+        <Grid item lg={2.7}>
           <FormControl fullWidth size="small">
-            <InputLabel id="dropdown-label">Locations</InputLabel>
+            <InputLabel id="location-label">Locations</InputLabel>
             <Select
-              labelId="dropdown-label"
-              id="dropdown"
-              value={value}
-              onChange={handleChange}
-              label="Ch Option"
+              labelId="location-label"
+              id="location-dropdown"
+              value={selectedLocation}
+              onChange={handleLocationChange}
+              label="Select Location"
             >
-              <MenuItem value="">Select an option</MenuItem>
-              <MenuItem value="option1">Option 1</MenuItem>
-              <MenuItem value="option2">Option 2</MenuItem>
-              <MenuItem value="option3">Option 3</MenuItem>
+              {loading ? (
+                <MenuItem disabled>Loading...</MenuItem>
+              ) : allLocation.length ? (
+                allLocation.map((location, index) => (
+                  <MenuItem key={index} value={location}>
+                    {location}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No locations available</MenuItem>
+              )}
             </Select>
           </FormControl>
         </Grid>
+
         <Grid item lg={2.7}>
           <FormControl fullWidth size="small">
             <InputLabel id="dropdown-label">Installation</InputLabel>
             <Select
               labelId="dropdown-label"
-              id="dropdown"
+              id="installation-dropdown"
               value={value2}
               onChange={handleChange2}
-              label="Ch Option"
+              label=" Installation"
             >
-              <MenuItem value="">Select an option</MenuItem>
-              <MenuItem value="option1">Option 1</MenuItem>
-              <MenuItem value="option2">Option 2</MenuItem>
-              <MenuItem value="option3">Option 3</MenuItem>
+              {loadingInstallations ? (
+                <MenuItem disabled>Loading...</MenuItem>
+              ) : installations.length ? (
+                installations.map((installation) => (
+                  <MenuItem key={installation._id} value={installation.name}>
+                    {installation.name}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No installations available</MenuItem>
+              )}
             </Select>
           </FormControl>
         </Grid>
-        <Grid item lg={2.8}>
+
+        <Grid item lg={2.7}>
           <FormControl fullWidth size="small">
             <InputLabel id="dropdown-label">Well Type</InputLabel>
             <Select

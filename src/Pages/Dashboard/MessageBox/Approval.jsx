@@ -125,6 +125,8 @@ export default function BasicCard() {
   const role = useSelector((state) => state.auth.role); // Get user role from Redux
   const authToken = useSelector((state) => state.auth.authToken); // Get auth token from Redux
 
+  
+
   // Function to fetch users based on role
   const fetchUsers = async () => {
     setLoading(true);
@@ -486,7 +488,7 @@ export default function BasicCard() {
                 <Box sx={{
                   display: "flex",
                   gap: "16px", // Adjust the value as needed 
-                  mb:'10px'
+                  mb: '10px'
                 }}>
                   <Button variant="contained" sx={{
                     color: "black",
@@ -559,6 +561,7 @@ export default function BasicCard() {
                       <Typography
                         variant="body1"
                         sx={{ fontWeight: "medium", marginLeft: "8px" }}
+                        onClick={handleOpen}
                       >
                         {item.title}
                       </Typography>
@@ -576,7 +579,7 @@ export default function BasicCard() {
       <Modal open={open} onClose={handleClose}>
         <Grid container sx={style} p={2}>
           {/* Header Section with Close Icon */}
-          <Grid container>
+          {/* <Grid container>
             <IconButton
               onClick={handleClose}
               sx={{
@@ -598,15 +601,13 @@ export default function BasicCard() {
                 New Message
               </Typography>
             </Grid>
-          </Grid>
+          </Grid> */}
 
           {/* Email Fields Section */}
-          <Grid container spacing={2}>
-            {/* From Field */}
+          {/* <Grid container spacing={2}>
             <Grid container spacing={2} p={3}>
-              {/* To Field */}
               <Grid item xs={12} sm={6} md={12} lg={12} display="flex" alignItems="center">
-                <Box mr={2} width="80px"> {/* Uniform width for the label box */}
+                <Box mr={2} width="80px"> 
                   <Typography variant="h6" noWrap>To</Typography>
                 </Box>
                 <Box>
@@ -619,9 +620,8 @@ export default function BasicCard() {
                 </Box>
               </Grid>
 
-              {/* From Field */}
               <Grid item xs={12} sm={6} md={12} lg={12} display="flex" alignItems="center">
-                <Box mr={2} width="80px"> {/* Same width as above */}
+                <Box mr={2} width="80px"> 
                   <Typography variant="h6" noWrap>CC</Typography>
                 </Box>
                 <Box>
@@ -634,9 +634,8 @@ export default function BasicCard() {
                 </Box>
               </Grid>
 
-              {/* Subject Field */}
               <Grid item xs={12} sm={6} md={12} lg={12} display="flex" alignItems="center">
-                <Box mr={2} width="80px"> {/* Same width for consistent alignment */}
+                <Box mr={2} width="80px">
                   <Typography variant="h6" noWrap>Subject</Typography>
                 </Box>
                 <Box>
@@ -650,7 +649,6 @@ export default function BasicCard() {
               </Grid>
             </Grid>
 
-            {/* Subject Field */}
             <Grid item xs={12} md={12} sm={12} lg={12}>
               <Box>
                 <Paper sx={{ padding: 2, height: "250px" }}>
@@ -665,9 +663,9 @@ export default function BasicCard() {
                 </Paper>
               </Box>
             </Grid>
-          </Grid>
+          </Grid> */}
 
-          <Grid
+          {/* <Grid
             container
             direction={rows}
             justifyContent={"space-between"}
@@ -698,12 +696,12 @@ export default function BasicCard() {
             <Button variant="contained" sx={{ width: "150px" }}>
               Send
             </Button>
-          </Grid>
+          </Grid> */}
         </Grid>
       </Modal>
 
       {/* Modal Dialog */}
-      <Dialog open={opens} onClose={handleDialogClose} maxWidth="md" fullWidth>
+      {/* <Dialog open={opens} onClose={handleDialogClose} maxWidth="md" fullWidth>
         <DialogContent>
           {selectedUser ? (
             <Grid container spacing={3}>
@@ -820,7 +818,7 @@ export default function BasicCard() {
             Close
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
     </Grid>
   );
 }

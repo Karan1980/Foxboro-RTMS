@@ -44,7 +44,6 @@ export const getAllInstallation = async (location, organizationName) => {
   try {
     const response = await axios.get(
       `${WELL_API}/get-InstallationsByLocation?location=${location}&organizationName=${organizationName}`
-      `${WELL_API}/get-InstallationsByLocation?location=${location}&organizationName=${organizationName}`
     );
     return response.data;
   } catch (error) {
@@ -52,6 +51,18 @@ export const getAllInstallation = async (location, organizationName) => {
     return catchError(error); // Throw error to handle in the calling function
   }
 };
+
+export const getAllInstallations = async (organizationName) => {
+  try {
+    const response = await axios.get(
+      `${WELL_API}/get-allInstallations?organizationName=${organizationName}`
+    );
+    return response.data;
+  } catch (error) {
+    console.error(error);
+    return catchError(error);
+  }
+}
 
 // add well number
 export const addWellNum = async (formData) => {
